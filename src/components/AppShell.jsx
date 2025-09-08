@@ -7,8 +7,11 @@ import {
   MessageSquare, 
   Settings,
   Music,
-  Crown
+  Crown,
+  LogOut,
+  User
 } from 'lucide-react'
+import { useAuth } from './AuthSystem'
 
 const navigation = [
   { id: 'dashboard', name: 'Dashboard', icon: Home },
@@ -19,6 +22,14 @@ const navigation = [
 ]
 
 function AppShell({ children, activeView, onViewChange, user }) {
+  const { logout } = useAuth()
+
+  const handleLogout = () => {
+    if (window.confirm('Are you sure you want to sign out?')) {
+      logout()
+    }
+  }
+
   return (
     <div className="flex h-screen bg-bg">
       {/* Sidebar */}
@@ -62,7 +73,7 @@ function AppShell({ children, activeView, onViewChange, user }) {
 
         {/* User Info */}
         <div className="p-4 border-t border-primary/20">
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 mb-3">
             <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
               <span className="text-sm font-medium text-white">
                 {user.email.charAt(0).toUpperCase()}
@@ -75,7 +86,21 @@ function AppShell({ children, activeView, onViewChange, user }) {
                 <span className="text-xs text-textSecondary">{user.subscriptionTier}</span>
               </div>
             </div>
-            <Settings className="w-4 h-4 text-textSecondary hover:text-textPrimary cursor-pointer" />
+          </div>
+          
+          {/* User Actions */}
+          <div className="flex items-center space-x-2">
+            <button className="flex items-center space-x-2 px-2 py-1.5 text-xs text-textSecondary hover:text-textPrimary hover:bg-primary/20 rounded-md transition-colors flex-1">
+              <Settings className="w-3 h-3" />
+              <span>Settings</span>
+            </button>
+            <button 
+              onClick={handleLogout}
+              className="flex items-center space-x-2 px-2 py-1.5 text-xs text-textSecondary hover:text-red-400 hover:bg-red-500/10 rounded-md transition-colors"
+            >
+              <LogOut className="w-3 h-3" />
+              <span>Sign Out</span>
+            </button>
           </div>
         </div>
       </div>
