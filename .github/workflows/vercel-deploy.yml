@@ -28,12 +28,19 @@ jobs:
       env:
         NODE_OPTIONS: --max-old-space-size=4096
 
-    - name: Skip Vercel deployment (secrets not configured)
-      if: "!secrets.VERCEL_TOKEN"
-      run: echo "⚠️ Skipping Vercel deployment - VERCEL_TOKEN secret not configured. To enable deployment, add VERCEL_TOKEN, VERCEL_ORG_ID, and VERCEL_PROJECT_ID secrets to your repository."
+    - name: Check Vercel secrets
+      id: check-secrets
+      run: |
+        if [ -z "${{ secrets.VERCEL_TOKEN }}" ]; then
+          echo "vercel_configured=false" >> $GITHUB_OUTPUT
+          echo "⚠️ Skipping Vercel deployment - VERCEL_TOKEN secret not configured."
+          echo "To enable deployment, add VERCEL_TOKEN, VERCEL_ORG_ID, and VERCEL_PROJECT_ID secrets to your repository."
+        else
+          echo "vercel_configured=true" >> $GITHUB_OUTPUT
+        fi
 
     - name: Deploy to Vercel (Production)
-      if: "(github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && secrets.VERCEL_TOKEN"
+      if: steps.check-secrets.outputs.vercel_configured == 'true' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
       uses: amondnet/vercel-action@v25
       with:
         vercel-token: ${{ secrets.VERCEL_TOKEN }}
@@ -42,7 +49,7 @@ jobs:
         vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
 
     - name: Deploy to Vercel (Preview)
-      if: "(github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master') && secrets.VERCEL_TOKEN"
+      if: steps.check-secrets.outputs.vercel_configured == 'true' && (github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master')
       uses: amondnet/vercel-action@v25
       with:
         vercel-token: ${{ secrets.VERCEL_TOKEN }}
@@ -51,7 +58,7 @@ jobs:
         vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
 
     - name: Comment PR with deployment URL
-      if: "github.event_name == 'pull_request' && secrets.VERCEL_TOKEN"
+      if: steps.check-secrets.outputs.vercel_configured == 'true' && github.event_name == 'pull_request'
       uses: actions/github-script@v7
       with:
         script: |
