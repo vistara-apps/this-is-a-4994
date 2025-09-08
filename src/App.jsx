@@ -1,19 +1,27 @@
 import React, { useState } from 'react'
+import { AuthProvider, useAuth, AuthScreen, AuthLoadingScreen } from './components/AuthSystem'
+import { DataProvider } from './hooks/useDataManager'
 import AppShell from './components/AppShell'
 import Dashboard from './components/Dashboard'
 import ClearanceWorkflow from './components/ClearanceWorkflow'
 import PerformanceTracker from './components/PerformanceTracker'
 import TrendForecaster from './components/TrendForecaster'
-import AIAssistant from './components/AIAssistant'
+import EnhancedAIAssistant from './components/EnhancedAIAssistant'
 
-function App() {
+// Main App Content Component
+function AppContent() {
   const [activeView, setActiveView] = useState('dashboard')
-  const [user, setUser] = useState({
-    userId: 1,
-    email: 'producer@example.com',
-    subscriptionTier: 'Pro',
-    createdAt: new Date().toISOString()
-  })
+  const { user, isAuthenticated, isLoading } = useAuth()
+
+  // Show loading screen while checking authentication
+  if (isLoading) {
+    return <AuthLoadingScreen />
+  }
+
+  // Show auth screen if not authenticated
+  if (!isAuthenticated) {
+    return <AuthScreen />
+  }
 
   const renderContent = () => {
     switch (activeView) {
@@ -26,7 +34,7 @@ function App() {
       case 'trends':
         return <TrendForecaster user={user} />
       case 'ai-assistant':
-        return <AIAssistant user={user} />
+        return <EnhancedAIAssistant user={user} />
       default:
         return <Dashboard user={user} />
     }
@@ -42,6 +50,17 @@ function App() {
         {renderContent()}
       </AppShell>
     </div>
+  )
+}
+
+// Root App Component with Providers
+function App() {
+  return (
+    <AuthProvider>
+      <DataProvider>
+        <AppContent />
+      </DataProvider>
+    </AuthProvider>
   )
 }
 
